@@ -11,25 +11,27 @@
 
 #pragma once
 
+#include "algorithm/concurrent_base.hpp"
+#include <cassert>
 #include <queue>
-#include "algorithm/concurrent_base_lock.hpp"
 
 namespace HORIZON::ALGORITHM
 {
     template<typename T,
              typename Container = std::deque<T>>
-    class concurrent_queue : public virtual concurrent_base_lock
+    class concurrent_queue : public virtual concurrent_base
     {
     public:
-        typedef typename Container::value_type      value_type;
-        typedef typename Container::reference       reference;
-        typedef typename Container::const_reference const_reference;
-        typedef typename Container::size_type       size_type;
-        typedef Container                           container_type;
+        using value_type = typename Container::value_type;
+        using reference = typename Container::reference;
+        using const_reference = typename Container::const_reference;
+        using size_type = typename Container::size_type;
+        using container_type = std::queue<value_type, Container>;
 
+        using time_type = std::chrono::nanoseconds;
     private:
-        std::queue<T, container_type> _container;
-        bool                          _closeToken = false;
+        container_type _container;
+        bool           _closeToken = false;
 
     public:
         //TODO constructor with allocators?
@@ -41,20 +43,25 @@ namespace HORIZON::ALGORITHM
         /*!
          * Returns true if the %concurrent_queue is empty.
          */
-        [[nodiscard]] bool empty() const
-        {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
+        [[nodiscard]] inline bool empty() const
+        { return empty(TakeOwnership()); }
 
+        [[nodiscard]] inline bool empty(access_token&& token) const
+        {
+            CheckForOwnership;
             return _container.empty();
         }
+
 
         /*!
          * Returns the number of elements in the %concurrent_queue.
          */
-        size_type size() const
-        {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
+        [[nodiscard]] inline size_type size() const
+        { return size(TakeOwnership()); }
 
+        [[nodiscard]] inline size_type size(access_token&& token) const
+        {
+            CheckForOwnership;
             return _container.size();
         }
 
@@ -80,28 +87,18 @@ namespace HORIZON::ALGORITHM
          *  underlying sequence.
          */
         void push(value_type const& item)
-        {
-            //TODO is this valid?
-            // push(std::forward<value_type>(item));
-
-            if (!CanModify()) return;
-
-            {
-                __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
-                _container.push(item);
-            }
-
-            _containerCV.notify_one();
-        }
+        { push(item, TakeOwnership()); }
 
         void push(value_type&& item)
+        { push(std::forward<value_type>(item), TakeOwnership()); }
+
+        void push(value_type&& item, access_token&& token)
         {
+            CheckForOwnership;
+
             if (!CanModify()) return;
 
-            {
-                __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
-                _container.push(std::move(item));
-            }
+            _container.push(std::move(item));
 
             _containerCV.notify_one();
         }
@@ -110,31 +107,37 @@ namespace HORIZON::ALGORITHM
         // because no reference is passed outside (requires freezing, etc.)
         template<typename... Args>
         void emplace(Args&& ... args)
+        { emplace(TakeOwnership(), std::forward<Args>(args) ...); }
+
+
+        template<typename ... Args>
+        void emplace(access_token&& token, Args&& ... args)
         {
+            CheckForOwnership;
+
             if (!CanModify()) return;
 
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
             _container.emplace(std::forward<Args>(args)...);
 
-            lock.unlock();
-            _containerCV.notify_one();
+            _containerCV.notify_all();
         }
 
+        // TODO: implement me
         /*!
          * Tries to remove the first element. If no element is available, this method returns immediatley with the result of false.
          * @return True if an element could be removed.
          */
-        bool try_pop(T& item)
-        {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
-
-            if (!CanModify()) return false;
-
-            item = std::move(_container.front());
-            _container.pop();
-
-            return true;
-        }
+        // bool try_pop(T& item)
+        // {
+        //     __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
+        //
+        //     if (!CanModify()) return false;
+        //
+        //     item = std::move(_container.front());
+        //     _container.pop();
+        //
+        //     return true;
+        // }
 
 
         /*!
@@ -145,12 +148,14 @@ namespace HORIZON::ALGORITHM
          * @param maximumWaitTime   The maximum time to wait until the pop operations is aborted.
          * @return                  True if an element could be removed.
          */
-        bool pop(std::chrono::nanoseconds const& maximumWaitTime = std::chrono::nanoseconds::max())
+        bool pop(time_type const& maximumWaitTime = time_type::max())
+        { return pop(TakeOwnership(), maximumWaitTime); }
+
+        bool pop(access_token&& token, time_type const& maximumWaitTime = time_type::max())
         {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
-            // do not use empty(), because lock is kept!
-            if (!WaitForElementsInQueue(lock, maximumWaitTime, [] { return false; }))
-                return false;
+            CheckForOwnership;
+
+            if (!WaitForElementsInQueue(token, maximumWaitTime)) return false;
 
             _container.pop();
             return true;
@@ -166,11 +171,14 @@ namespace HORIZON::ALGORITHM
          * @param maximumWaitTime   The maximum time to wait until the pop operations is aborted.
          * @return                  True if an element could be removed.
          */
-        bool pop(T& item, std::chrono::nanoseconds const& maximumWaitTime = std::chrono::nanoseconds::max())
+        bool pop(T& item, time_type const& maximumWaitTime = time_type::max())
+        { return pop(item, TakeOwnership(), maximumWaitTime); }
+
+        bool pop(T& item, access_token&& token, time_type maximumWaitTime = time_type::max())
         {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
-            if (!WaitForElementsInQueue(lock, maximumWaitTime))
-                return false;
+            CheckForOwnership;
+
+            if (!WaitForElementsInQueue(token, maximumWaitTime)) return false;
 
             item = std::move(_container.front());
             _container.pop();
@@ -179,12 +187,15 @@ namespace HORIZON::ALGORITHM
         }
 
         bool swap(concurrent_queue& other)
+        { return swap(other, TakeOwnership(), other.TakeOwnership()); }
+
+        bool swap(concurrent_queue& other, access_token&& myToken, access_token&& otherToken)
         {
+            assert(myToken.mutex()->native_handle() == _containerAccess.native_handle());
+            assert(otherToken.mutex()->native_handle() == other._containerAccess.native_handle());
+
             // todo: throw?
             if (!(CanModify() && other.CanModify())) return false;
-
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK_TARGET(otherLock, other)
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(myLock)
 
             std::swap(_container, other._container);
 
@@ -196,8 +207,11 @@ namespace HORIZON::ALGORITHM
 
 
         void clear()
+        { clear(TakeOwnership()); }
+
+        void clear(access_token&& token)
         {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
+            CheckForOwnership;
 
             std::queue<T> empty;
             std::swap(_container, empty);
@@ -232,20 +246,19 @@ namespace HORIZON::ALGORITHM
          * Blocks the current thread execution until an element is in queue or the wait timeout is reached.
          * Returns true if an element is in queue.
          */
-        inline bool WaitForElementsInQueue(LockType& lock, std::chrono::nanoseconds const& waitTime)
+        inline bool WaitForElementsInQueue(access_token&& token, time_type const& waitTime)
         {
             if (is_closed()) return false;
 
-            // do not use empty(), because lock is kept!
-            if (!_containerCV.wait_for(lock, waitTime, [this] { return !_container.empty() || _closeToken; }))
+            if (!_containerCV.wait_for(token, waitTime, [this, token] { return empty(token) || _closeToken; }))
                 return false; // timeout
 
-            return !_closeToken; //
+            return !_closeToken;
         }
 
 
         [[nodiscard]] inline bool CanModify() const
-        { return !(is_closed() || IsLocked()); }
+        { return !(is_closed()); }
 
     };
 }
