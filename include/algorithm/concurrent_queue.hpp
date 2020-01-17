@@ -141,9 +141,12 @@ namespace HORIZON::ALGORITHM
          * @return                  True if an element could be removed.
          */
         bool pop(time_type const& maximumWaitTime = time_type::max())
-        { return pop(TakeOwnership(), maximumWaitTime); }
+        {
+            auto token = TakeOwnership();
+            return pop(token, maximumWaitTime);
+        }
 
-        bool pop(access_token&& token, time_type const& maximumWaitTime = time_type::max())
+        bool pop(access_token& token, time_type const& maximumWaitTime = time_type::max())
         {
             CheckForOwnership;
 
@@ -164,9 +167,12 @@ namespace HORIZON::ALGORITHM
          * @return                  True if an element could be removed.
          */
         bool pop(T& item, time_type const& maximumWaitTime = time_type::max())
-        { return pop(item, TakeOwnership(), maximumWaitTime); }
+        {
+            auto token = TakeOwnership();
+            return pop(item, token, maximumWaitTime);
+        }
 
-        bool pop(T& item, access_token&& token, time_type const& maximumWaitTime = time_type::max())
+        bool pop(T& item, access_token& token, time_type const& maximumWaitTime = time_type::max())
         {
             CheckForOwnership;
 
@@ -179,7 +185,10 @@ namespace HORIZON::ALGORITHM
         }
 
         bool swap(concurrent_queue& other)
-        { return swap(other, TakeOwnership(), other.TakeOwnership()); }
+        {
+            auto token = TakeOwnership();
+            return swap(other, token, other.TakeOwnership());
+        }
 
         bool swap(concurrent_queue& other, access_token const& myToken, access_token const& otherToken)
         {
