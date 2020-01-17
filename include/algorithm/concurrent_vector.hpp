@@ -11,9 +11,7 @@
 
 #pragma once
 
-// #pragma error "Unsupported file included (concurrent_vector)"
-
-#include "algorithm/concurrent_base_lock.hpp"
+#include "algorithm/concurrent_base.hpp"
 #include <vector>
 #include <algorithm>
 
@@ -26,7 +24,7 @@ namespace HORIZON::ALGORITHM
      */
     template<typename T,
              typename Alloc = std::allocator<T>>
-    class concurrent_vector : public virtual concurrent_base_lock
+    class concurrent_vector : public virtual concurrent_base
     {
     public:
         using value_type = T;
@@ -50,87 +48,137 @@ namespace HORIZON::ALGORITHM
         //    TODO construcotrs
 
 
+        /*!
+         * Gets the capacity of the container.
+         */
         [[nodiscard]] inline size_type capacity() const
+        { return capacity(TakeOwnership()); }
+
+        [[nodiscard]] inline size_type capacity(access_token const& token) const
         {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
-            return this->_container.capacity();
+            CheckForOwnership;
+            return _container.capacity();
         }
 
+        /*!
+         * Gets the size of the container.
+         */
         [[nodiscard]] inline size_type size() const
+        { return size(TakeOwnership()); }
+
+        [[nodiscard]] inline size_type size(access_token const& token) const
         {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
+            CheckForOwnership;
             return _container.size();
         }
 
+        /*!
+         * True if the container is empty.
+         */
         [[nodiscard]] inline bool empty() const
+        { return empty(TakeOwnership()); }
+
+        [[nodiscard]] inline bool empty(access_token const& token) const
         {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
+            CheckForOwnership;
             return _container.empty();
         }
 
 
+        /*!
+         * Resizes the container.
+         */
         void resize(size_type size)
+        { resize(size, TakeOwnership()); }
+
+        void resize(size_type size, access_token const& token) const
         {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
-            this->_container.resize(size);
+            CheckForOwnership;
+            _container.resize(size);
         }
 
+        /*!
+         * Resizes the container and initialises with a default element.
+         */
         void resize(size_type size, value_type const& def)
+        { resize(size, def, TakeOwnership()); }
+
+        void resize(size_type size, value_type const& def, access_token const& token)
         {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
-            this->_container.resize(size, def);
+            CheckForOwnership;
+            _container.resize(size, def);
         }
 
+        /*!
+         * Reserves space in the container wihtout initialising.
+         */
         void reserve(size_type size)
+        { reserve(size, TakeOwnership()); }
+
+        void reserve(size_type size, access_token const& token)
         {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
-            this->_container.reserve(size);
+            CheckForOwnership;
+            _container.reserve(size);
         }
 
+        /*!
+         * Places the given element at the end of the vector.
+         */
         void push_back(value_type const& item)
-        {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
+        { push_back(item, TakeOwnership()); }
 
-            this->_container.push_back(item);
+        void push_back(value_type const& item, access_token const& token)
+        {
+            CheckForOwnership;
+
+            _container.push_back(item);
         }
 
         void push_back(value_type&& item)
+        { push_back(std::move(item), TakeOwnership()); }
+
+        void push_back(value_type&& item, access_token const& token)
         {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
-            this->_container.push_back(std::move(item));
+            CheckForOwnership;
+            _container.push_back(std::move(item));
         }
 
+
+        /*!
+         * Swaps the first element with the second element.
+         */
+        void swap(access_type const& first, access_type const& second)
+        { swap(first, second, TakeOwnership()); }
+
+        void swap(access_type const& first, access_type const& second, access_token const& token)
+        {
+            CheckForOwnership;
+            std::iter_swap(begin() + first, begin() + second);
+        }
 
         /*!
          * Swaps the given element with the last element.
          * @param id The id of the element.
          */
-        void swap(access_type const& first, access_type const& second)
-        {
-            // need to call freeze because of iterators
-            // TODO: this might block if there is an error thrown...
-
-
-            this->freeze();
-            std::iter_swap(begin() + first, begin() + second);
-            this->unfreeze();
-        }
-
         void swap(access_type const& id)
+        { swap(id, TakeOwnership()); }
+
+
+        void swap(access_type const& id, access_token const& token)
         {
-            // need to call freeze because of iterators
-            // TODO: this might block if there is an error thrown...
-            this->freeze();
-            std::iter_swap(id, end() - 1);
-            this->unfreeze();
+            CheckForOwnership;
+
+            // TODO: this might block if an error is thrown...
+            std::iter_swap(id, end(token) - 1);
         }
 
 
         /*!
          * Gets an iterator to the beginning of the container.
          */
-        iterator begin_unsafe() noexcept
+        iterator begin(access_token const& token) noexcept
         {
+            CheckForOwnership;
             return _container.begin();
         }
 
@@ -138,8 +186,9 @@ namespace HORIZON::ALGORITHM
         /*!
          * Gets a reverse iterator to the beginning of the container.
          */
-        reverse_iterator rbegin_unsafe() noexcept
+        reverse_iterator rbegin(access_token const& token) noexcept
         {
+            CheckForOwnership;
             return _container.rbegin();
         }
 
@@ -148,8 +197,9 @@ namespace HORIZON::ALGORITHM
          *
          * This is unsafe per default.
          */
-        iterator end_unsafe() noexcept
+        iterator end(access_token const& token) noexcept
         {
+            CheckForOwnership;
             return _container.end();
         }
 
@@ -158,8 +208,9 @@ namespace HORIZON::ALGORITHM
          *
          * This is unsafe per default.
          */
-        reverse_iterator rend_unsafe() noexcept
+        reverse_iterator rend(access_token const& token) noexcept
         {
+            CheckForOwnership;
             return _container.rend();
         }
 
@@ -167,46 +218,48 @@ namespace HORIZON::ALGORITHM
         /*!
          * Gets an iterator to the beginning of the container.
          */
-        const_iterator begin() const noexcept
+        const_iterator begin(access_token const& token) const noexcept
         {
-            CheckForLocked();
+            CheckForOwnership;
             return _container.begin();
         }
 
         /*!
          * Gets a reversed iterator to the beginning of the container.
          */
-        const_reverse_iterator rbegin() const noexcept
+        const_reverse_iterator rbegin(access_token const& token) const noexcept
         {
-            CheckForLocked();
+            CheckForOwnership;
             return _container.rbegin();
         }
 
         /*!
          * Gets an iterator to the end of the container.
          */
-        const_iterator end() const noexcept
+        const_iterator end(access_token const& token) const noexcept
         {
-            CheckForLocked();
+            CheckForOwnership;
             return _container.end();
         }
 
         /*!
          * Gets a reverse iterator to the end of the container.
          */
-        const_reverse_iterator rend() const noexcept
+        const_reverse_iterator rend(access_token const& token) const noexcept
         {
-            CheckForLocked();
+            CheckForOwnership;
             return _container.rend();
         }
 
 
         void clear() noexcept
+        { clear(TakeOwnership()); }
+
+        void clear(access_token const& token) noexcept
         {
-            __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
+            CheckForOwnership;
 
             _container.clear();
         }
-
     };
 }

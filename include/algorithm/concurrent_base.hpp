@@ -17,7 +17,7 @@
 
 namespace HORIZON::ALGORITHM
 {
-    #if !NDEBUG
+    #if NDEBUG
     #define CheckForOwnership
     #else
     #define CheckForOwnership assert(token.mutex()->native_handle() == _containerAccess.native_handle())
@@ -46,6 +46,7 @@ namespace HORIZON::ALGORITHM
         {
             // TODO: the access token MUST be the token of the container, how to do?
             return std::move(access_token(_containerAccess));
+            // return access_token(_containerAccess);
         }
     };
 }

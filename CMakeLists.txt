@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(HEADER
         include/algorithm/concurrent_base.hpp
-        include/algorithm/concurrent_base_lock.hpp
         include/algorithm/concurrent_queue.hpp
         include/algorithm/concurrent_statelist.hpp
         include/algorithm/concurrent_unorderedmap.hpp

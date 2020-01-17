@@ -46,7 +46,7 @@ namespace HORIZON::ALGORITHM
         [[nodiscard]] inline bool empty() const
         { return empty(TakeOwnership()); }
 
-        [[nodiscard]] inline bool empty(access_token&& token) const
+        [[nodiscard]] inline bool empty(access_token const& token) const
         {
             CheckForOwnership;
             return _container.empty();
@@ -59,7 +59,7 @@ namespace HORIZON::ALGORITHM
         [[nodiscard]] inline size_type size() const
         { return size(TakeOwnership()); }
 
-        [[nodiscard]] inline size_type size(access_token&& token) const
+        [[nodiscard]] inline size_type size(access_token const& token) const
         {
             CheckForOwnership;
             return _container.size();
@@ -92,7 +92,7 @@ namespace HORIZON::ALGORITHM
         void push(value_type&& item)
         { push(std::forward<value_type>(item), TakeOwnership()); }
 
-        void push(value_type&& item, access_token&& token)
+        void push(value_type&& item, access_token const& token)
         {
             CheckForOwnership;
 
@@ -107,20 +107,12 @@ namespace HORIZON::ALGORITHM
         // because no reference is passed outside (requires freezing, etc.)
         template<typename... Args>
         void emplace(Args&& ... args)
-        { emplace(TakeOwnership(), std::forward<Args>(args) ...); }
+        { emplace_helper(TakeOwnership(), std::forward<Args>(args) ...); }
 
 
         template<typename ... Args>
-        void emplace(access_token&& token, Args&& ... args)
-        {
-            CheckForOwnership;
-
-            if (!CanModify()) return;
-
-            _container.emplace(std::forward<Args>(args)...);
-
-            _containerCV.notify_all();
-        }
+        void emplace(access_token const& token, Args&& ... args)
+        { emplace_helper(token, std::forward<Args>(args) ...); }
 
         // TODO: implement me
         /*!
@@ -174,7 +166,7 @@ namespace HORIZON::ALGORITHM
         bool pop(T& item, time_type const& maximumWaitTime = time_type::max())
         { return pop(item, TakeOwnership(), maximumWaitTime); }
 
-        bool pop(T& item, access_token&& token, time_type maximumWaitTime = time_type::max())
+        bool pop(T& item, access_token&& token, time_type const& maximumWaitTime = time_type::max())
         {
             CheckForOwnership;
 
@@ -189,7 +181,7 @@ namespace HORIZON::ALGORITHM
         bool swap(concurrent_queue& other)
         { return swap(other, TakeOwnership(), other.TakeOwnership()); }
 
-        bool swap(concurrent_queue& other, access_token&& myToken, access_token&& otherToken)
+        bool swap(concurrent_queue& other, access_token const& myToken, access_token const& otherToken)
         {
             assert(myToken.mutex()->native_handle() == _containerAccess.native_handle());
             assert(otherToken.mutex()->native_handle() == other._containerAccess.native_handle());
@@ -209,7 +201,7 @@ namespace HORIZON::ALGORITHM
         void clear()
         { clear(TakeOwnership()); }
 
-        void clear(access_token&& token)
+        void clear(access_token const& token)
         {
             CheckForOwnership;
 
@@ -246,14 +238,27 @@ namespace HORIZON::ALGORITHM
          * Blocks the current thread execution until an element is in queue or the wait timeout is reached.
          * Returns true if an element is in queue.
          */
-        inline bool WaitForElementsInQueue(access_token&& token, time_type const& waitTime)
+        inline bool WaitForElementsInQueue(access_token& token, time_type const& waitTime)
         {
             if (is_closed()) return false;
 
-            if (!_containerCV.wait_for(token, waitTime, [this, token] { return empty(token) || _closeToken; }))
+            if (!_containerCV.wait_for(token, waitTime, [this] { return !_container.empty() || _closeToken; }))
                 return false; // timeout
 
             return !_closeToken;
+        }
+
+
+        template<typename ... Args>
+        void emplace_helper(access_token const& token, Args&& ...args)
+        {
+            CheckForOwnership;
+
+            if (!CanModify()) return;
+
+            _container.emplace(std::forward<Args>(args)...);
+
+            _containerCV.notify_all();
         }
 
 
