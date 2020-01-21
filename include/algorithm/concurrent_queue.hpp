@@ -249,6 +249,9 @@ namespace HORIZON::ALGORITHM
          */
         inline bool WaitForElementsInQueue(access_token& token, time_type const& waitTime)
         {
+            // early checks for either empty or closed.
+            // this order allows emptying the queue after it has been closed
+            if (!_container.empty()) return true;
             if (is_closed()) return false;
 
             if (!_containerCV.wait_for(token, waitTime, [this] { return !_container.empty() || _closeToken; }))
