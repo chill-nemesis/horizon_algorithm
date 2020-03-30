@@ -11,11 +11,11 @@
 
 #pragma once
 
-#include "algorithm/concurrent_base.hpp"
+#include "concurrent_base.hpp"
 #include <cassert>
 #include <queue>
 
-namespace HORIZON::ALGORITHM
+namespace HORIZON::ALGORITHM::CONCURRENT
 {
     template<typename T,
              typename Container = std::deque<T>>

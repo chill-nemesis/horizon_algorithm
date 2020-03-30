@@ -15,7 +15,7 @@
 #include <condition_variable>
 #include <atomic>
 
-namespace HORIZON::ALGORITHM
+namespace HORIZON::ALGORITHM::CONCURRENT
 {
     #if NDEBUG
     #define CheckForOwnership

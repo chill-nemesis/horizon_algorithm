@@ -4,11 +4,12 @@ project(horizon_algorithm)
 set(CMAKE_CXX_STANDARD 17)
 
 set(HEADER
-        include/algorithm/concurrent_base.hpp
-        include/algorithm/concurrent_queue.hpp
-        include/algorithm/concurrent_statelist.hpp
-        include/algorithm/concurrent_unorderedmap.hpp
-        include/algorithm/concurrent_vector.hpp)
+        include/algorithm/concurrent/concurrent_base.hpp
+        include/algorithm/concurrent/concurrent_queue.hpp
+        include/algorithm/concurrent/concurrent_statelist.hpp
+        include/algorithm/concurrent/concurrent_unorderedmap.hpp
+        include/algorithm/concurrent/concurrent_vector.hpp
+        include/algorithm/stl_extension/vector.hpp)
 
 set(SOURCE
         )

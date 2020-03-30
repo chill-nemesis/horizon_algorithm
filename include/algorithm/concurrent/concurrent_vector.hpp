@@ -11,11 +11,11 @@
 
 #pragma once
 
-#include "algorithm/concurrent_base.hpp"
+#include "concurrent_base.hpp"
 #include <vector>
 #include <algorithm>
 
-namespace HORIZON::ALGORITHM
+namespace HORIZON::ALGORITHM::CONCURRENT
 {
     /*!
      * A concurrent vector.

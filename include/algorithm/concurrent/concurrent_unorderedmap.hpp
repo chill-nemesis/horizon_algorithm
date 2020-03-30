@@ -16,7 +16,7 @@
 #include "algorithm/concurrent_base_access.hpp"
 #include <unordered_map>
 
-namespace HORIZON::ALGORITHM
+namespace HORIZON::ALGORITHM::CONCURRENT
 {
     template<typename Key,
              typename T,

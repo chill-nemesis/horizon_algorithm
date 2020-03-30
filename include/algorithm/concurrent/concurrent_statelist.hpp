@@ -16,7 +16,7 @@
 // #include <mutex>
 // #include <condition_variable>
 //
-// namespace HORIZON::ALGORITHM
+// namespace HORIZON::ALGORITHM::CONCURRENT
 // {
 //     template<typename T,
 //              typename S,
