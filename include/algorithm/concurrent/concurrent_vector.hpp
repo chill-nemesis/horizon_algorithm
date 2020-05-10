@@ -33,7 +33,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         using size_type = typename container_type::size_type;
 
         using reference = value_type&;
-        using const_reference =  value_type const&;
+        using const_reference = value_type const&;
         using access_type = size_type;
 
         using iterator = typename container_type::iterator;
@@ -52,7 +52,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * Gets the capacity of the container.
          */
         [[nodiscard]] inline size_type capacity() const
-        { return capacity(TakeOwnership()); }
+        { return capacity(std::move(Guard())); }
 
         [[nodiscard]] inline size_type capacity(access_token const& token) const
         {
@@ -64,7 +64,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * Gets the size of the container.
          */
         [[nodiscard]] inline size_type size() const
-        { return size(TakeOwnership()); }
+        { return size(std::move(Guard())); }
 
         [[nodiscard]] inline size_type size(access_token const& token) const
         {
@@ -76,7 +76,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * True if the container is empty.
          */
         [[nodiscard]] inline bool empty() const
-        { return empty(TakeOwnership()); }
+        { return empty(std::move(Guard())); }
 
         [[nodiscard]] inline bool empty(access_token const& token) const
         {
@@ -89,7 +89,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * Resizes the container.
          */
         void resize(size_type size)
-        { resize(size, TakeOwnership()); }
+        { resize(size, std::move(Guard())); }
 
         void resize(size_type size, access_token const& token) const
         {
@@ -101,7 +101,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * Resizes the container and initialises with a default element.
          */
         void resize(size_type size, value_type const& def)
-        { resize(size, def, TakeOwnership()); }
+        { resize(size, def, std::move(Guard())); }
 
         void resize(size_type size, value_type const& def, access_token const& token)
         {
@@ -113,7 +113,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * Reserves space in the container wihtout initialising.
          */
         void reserve(size_type size)
-        { reserve(size, TakeOwnership()); }
+        { reserve(size, std::move(Guard())); }
 
         void reserve(size_type size, access_token const& token)
         {
@@ -125,7 +125,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * Places the given element at the end of the vector.
          */
         void push_back(value_type const& item)
-        { push_back(item, TakeOwnership()); }
+        { push_back(item, std::move(Guard())); }
 
         void push_back(value_type const& item, access_token const& token)
         {
@@ -135,7 +135,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         }
 
         void push_back(value_type&& item)
-        { push_back(std::move(item), TakeOwnership()); }
+        { push_back(std::move(item), std::move(Guard())); }
 
         void push_back(value_type&& item, access_token const& token)
         {
@@ -148,7 +148,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * Swaps the first element with the second element.
          */
         void swap(access_type const& first, access_type const& second)
-        { swap(first, second, TakeOwnership()); }
+        { swap(first, second, std::move(Guard())); }
 
         void swap(access_type const& first, access_type const& second, access_token const& token)
         {
@@ -161,7 +161,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * @param id The id of the element.
          */
         void swap(access_type const& id)
-        { swap(id, TakeOwnership()); }
+        { swap(id, std::move(Guard())); }
 
 
         void swap(access_type const& id, access_token const& token)
@@ -253,7 +253,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
 
         void clear() noexcept
-        { clear(TakeOwnership()); }
+        { clear(std::move(Guard())); }
 
         void clear(access_token const& token) noexcept
         {

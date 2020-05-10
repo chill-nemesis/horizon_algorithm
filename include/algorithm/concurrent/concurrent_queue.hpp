@@ -12,14 +12,13 @@
 #pragma once
 
 #include "concurrent_base.hpp"
-#include <cassert>
 #include <queue>
 
 namespace HORIZON::ALGORITHM::CONCURRENT
 {
     template<typename T,
              typename Container = std::deque<T>>
-    class concurrent_queue : public virtual concurrent_base
+    class concurrent_queue : public concurrent_base
     {
     public:
         using value_type = typename Container::value_type;
@@ -28,10 +27,8 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         using size_type = typename Container::size_type;
         using container_type = std::queue<value_type, Container>;
 
-        using time_type = std::chrono::nanoseconds;
     private:
         container_type _container;
-        bool           _closeToken = false;
 
     public:
         //TODO constructor with allocators?
@@ -39,14 +36,9 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         ~concurrent_queue()
         { close(); }
 
+        using concurrent_base::empty;
 
-        /*!
-         * Returns true if the %concurrent_queue is empty.
-         */
-        [[nodiscard]] inline bool empty() const
-        { return empty(TakeOwnership()); }
-
-        [[nodiscard]] inline bool empty(access_token const& token) const
+        [[nodiscard]] inline bool empty(access_token const& token) const override
         {
             CheckForOwnership;
             return _container.empty();
@@ -57,19 +49,13 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * Returns the number of elements in the %concurrent_queue.
          */
         [[nodiscard]] inline size_type size() const
-        { return size(TakeOwnership()); }
+        { return size(std::move(Guard())); }
 
         [[nodiscard]] inline size_type size(access_token const& token) const
         {
             CheckForOwnership;
             return _container.size();
         }
-
-        /*!
-         * True if the queue is open (elements can be accessed).
-         */
-        [[nodiscard]] inline bool is_closed() const
-        { return _closeToken; }
 
         // TODO: maybe freeze the queue?
         // reference front();
@@ -86,17 +72,30 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          *  to it.  The time complexity of the operation depends on the
          *  underlying sequence.
          */
-        void push(value_type const& item)
-        { push(item, TakeOwnership()); }
+        void push(value_type const& item) noexcept
+        { push(item, std::move(Guard())); }
 
-        void push(value_type&& item)
-        { push(std::forward<value_type>(item), TakeOwnership()); }
+        void push(value_type&& item) noexcept
+        { push(std::forward<value_type>(item), std::move(Guard())); }
 
-        void push(value_type&& item, access_token const& token)
+        // we need both variants (first for const&, second for move)
+
+        void push(value_type const& item, access_token const& token) noexcept
         {
             CheckForOwnership;
 
-            if (!CanModify()) return;
+            // ThrowIfClosed();
+
+            _container.push(item);
+
+            _containerCV.notify_one();
+        }
+
+        void push(value_type&& item, access_token const& token) noexcept
+        {
+            CheckForOwnership;
+
+            // ThrowIfClosed();
 
             _container.push(std::move(item));
 
@@ -105,18 +104,18 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         // the return value is NOT decltype(auto)
         // because no reference is passed outside (requires freezing, etc.)
-        template<typename... Args>
-        void emplace(Args&& ... args)
-        { emplace_helper(TakeOwnership(), std::forward<Args>(args) ...); }
+        template<class... Args>
+        void emplace(Args&& ... args) noexcept
+        { emplace_helper(std::move(Guard()), std::forward<Args>(args) ...); }
 
 
-        template<typename ... Args>
-        void emplace(access_token const& token, Args&& ... args)
+        template<class ... Args>
+        void emplace(access_token const& token, Args&& ... args) noexcept
         { emplace_helper(token, std::forward<Args>(args) ...); }
 
         // TODO: implement me
         /*!
-         * Tries to remove the first element. If no element is available, this method returns immediatley with the result of false.
+         * Tries to remove the first element. If no element is available, this method returns immediately with the result of false.
          * @return True if an element could be removed.
          */
         // bool try_pop(T& item)
@@ -132,6 +131,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         // }
 
 
+        [[maybe_unused]]
         /*!
          * Removes the first element.
          * The calling thread is blocked until an element can be retrieved or until a user specified timeout is reached.
@@ -140,13 +140,12 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * @param maximumWaitTime   The maximum time to wait until the pop operations is aborted.
          * @return                  True if an element could be removed.
          */
-        bool pop(time_type const& maximumWaitTime = time_type::max())
+        bool pop(time_type const& maximumWaitTime = _maxWaitTime) noexcept
         {
-            auto token = TakeOwnership();
-            return pop(token, maximumWaitTime);
+            return pop(std::move(Guard()), maximumWaitTime);
         }
 
-        bool pop(access_token& token, time_type const& maximumWaitTime = time_type::max())
+        bool pop(access_token& token, time_type const& maximumWaitTime = _maxWaitTime) noexcept
         {
             CheckForOwnership;
 
@@ -157,7 +156,6 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         }
 
         /*!
-
          * Removes the first element.
          * The calling thread is blocked until an element can be retrieved or until a user specified timeout is reached.
          * If the timeout is reached, no element is removed and this method returns false.
@@ -166,13 +164,12 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          * @param maximumWaitTime   The maximum time to wait until the pop operations is aborted.
          * @return                  True if an element could be removed.
          */
-        bool pop(T& item, time_type const& maximumWaitTime = time_type::max())
+        bool pop(T& item, time_type const& maximumWaitTime = _maxWaitTime) noexcept
         {
-            auto token = TakeOwnership();
-            return pop(item, token, maximumWaitTime);
+            return pop(item, std::move(Guard()), maximumWaitTime);
         }
 
-        bool pop(T& item, access_token& token, time_type const& maximumWaitTime = time_type::max())
+        bool pop(T& item, access_token&& token, time_type const& maximumWaitTime = _maxWaitTime) noexcept
         {
             CheckForOwnership;
 
@@ -184,98 +181,69 @@ namespace HORIZON::ALGORITHM::CONCURRENT
             return true;
         }
 
-        bool swap(concurrent_queue& other)
-        {
-            auto token = TakeOwnership();
-            return swap(other, token, other.TakeOwnership());
-        }
+        void swap(concurrent_queue& other) noexcept
+        { swap(other, std::move(Guard()), std::move(other.Guard())); }
 
-        bool swap(concurrent_queue& other, access_token const& myToken, access_token const& otherToken)
+        void swap(concurrent_queue& other, access_token const& myToken, access_token const& otherToken) noexcept
         {
             assert(myToken.mutex()->native_handle() == _containerAccess.native_handle());
             assert(otherToken.mutex()->native_handle() == other._containerAccess.native_handle());
 
-            // todo: throw?
-            if (!(CanModify() && other.CanModify())) return false;
+            // make sure both containers are not closed
+            // ThrowIfClosed();
+            // other.ThrowIfClosed();
 
             std::swap(_container, other._container);
 
-            other._containerCV.notify_one();
-            _containerCV.notify_one();
-
-            return true;
+            other._containerCV.notify_all();
+            _containerCV.notify_all();
         }
 
 
-        void clear()
-        { clear(TakeOwnership()); }
+        void clear() noexcept
+        { clear(std::move(Guard())); }
 
-        void clear(access_token const& token)
+        void clear(access_token const& token) noexcept
         {
             CheckForOwnership;
+            // ThrowIfClosed();
 
             std::queue<T> empty;
             std::swap(_container, empty);
         }
 
-        /*!
-         * Closes the queue and notifies all waiting threads.
-         */
-        void close()
-        {
-            //TODO: atomic?
-            if (_closeToken) return;
-            _closeToken = true;
-
-            _containerCV.notify_all();
-        }
-
-        /*!
-         * (Re-) opens the queue.
-         */
-        void open()
-        {
-            //TODO: atomic?
-            if (!_closeToken) return;
-
-            _closeToken = false;
-        }
-
     private:
-        /*!
-         * Waits until the container is not empty.
-         * Blocks the current thread execution until an element is in queue or the wait timeout is reached.
-         * Returns true if an element is in queue.
-         */
-        inline bool WaitForElementsInQueue(access_token& token, time_type const& waitTime)
-        {
-            // early checks for either empty or closed.
-            // this order allows emptying the queue after it has been closed
-            if (!_container.empty()) return true;
-            if (is_closed()) return false;
-
-            if (!_containerCV.wait_for(token, waitTime, [this] { return !_container.empty() || _closeToken; }))
-                return false; // timeout
-
-            return !_closeToken;
-        }
-
-
-        template<typename ... Args>
-        void emplace_helper(access_token const& token, Args&& ...args)
+        template<class ... Args>
+        void emplace_helper(access_token const& token, Args&& ...args) noexcept
         {
             CheckForOwnership;
 
-            if (!CanModify()) return;
+            // ThrowIfClosed();
 
             _container.emplace(std::forward<Args>(args)...);
 
             _containerCV.notify_all();
         }
 
+        /*!
+         * Waits until the container is not empty.
+         * Blocks the current thread execution until an element is in queue or the wait timeout is reached.
+         * Returns true if an element is in queue.
+         */
+        inline bool WaitForElementsInQueue(access_token& token, time_type const& waitTime) noexcept
+        {
+            assert(waitTime.count() > 0);
 
-        [[nodiscard]] inline bool CanModify() const
-        { return !(is_closed()); }
+            // early checks for either empty or closed.
+            // this order allows emptying the queue after it has been closed
+            if (!empty(token)) return true;
+            if (is_closed()) return false;
 
+            if (!_containerCV.wait_for(token, waitTime, [this, &token] { return !empty(token) || is_closed(); }))
+                return false; // timeout
+
+            // ThrowIfClosed();
+            return CanModify();
+        }
     };
 }
