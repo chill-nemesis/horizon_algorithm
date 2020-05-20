@@ -3,6 +3,9 @@ project(horizon_algorithm)
 
 set(CMAKE_CXX_STANDARD 17)
 
+#TODO: make that a dependency?
+include(../cmakeHelpers/Horizon.cmake)
+
 set(HEADER
         include/algorithm/concurrent/concurrent_base.hpp
         include/algorithm/concurrent/concurrent_queue.hpp
