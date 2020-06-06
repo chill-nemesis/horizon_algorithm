@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
-project(horizon_algorithm)
+project(horizon_algorithm VERSION 0.0.0 LANGUAGES CXX C)
 
-set(CMAKE_CXX_STANDARD 17)
+include(HorizonCommon)
 
-#TODO: make that a dependency?
-include(../cmakeHelpers/Horizon.cmake)
+include_directories(include/)
 
 set(HEADER
         include/algorithm/concurrent/concurrent_base.hpp
@@ -13,12 +12,14 @@ set(HEADER
         include/algorithm/concurrent/concurrent_unorderedmap.hpp
         include/algorithm/concurrent/concurrent_vector.hpp
         include/algorithm/concurrent/ContainerClosedError.hpp
-        include/algorithm/stl_extension/vector.hpp)
+        include/algorithm/stl_extension/vector.hpp
+        include/algorithm/UUID.hpp)
 
 set(SOURCE
         )
 
 set(HORIZON_ALGORITHM_COMPILE_SOURCE ${HEADER} ${SOURCE})
+
 
 add_library(horizon_algorithm INTERFACE)
 target_link_libraries(horizon_algorithm INTERFACE horizon_preprocessor)
