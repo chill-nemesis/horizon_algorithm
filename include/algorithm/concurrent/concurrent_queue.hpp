@@ -235,6 +235,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
             assert(waitTime.count() > 0);
 
             // early checks for either empty or closed.
+            // first check if we have elements in queue, then for closed
             // this order allows emptying the queue after it has been closed
             if (!empty(token)) return true;
             if (is_closed()) return false;

@@ -72,13 +72,9 @@ namespace HORIZON::ALGORITHM::CONCURRENT
             return _container.size();
         }
 
-        /*!
-         * True if the container is empty.
-         */
-        [[nodiscard]] inline bool empty() const
-        { return empty(std::move(Guard())); }
+        using concurrent_base::empty;
 
-        [[nodiscard]] inline bool empty(access_token const& token) const
+        [[nodiscard]] inline bool empty(access_token const& token) const override
         {
             CheckForOwnership;
             return _container.empty();

@@ -15,6 +15,7 @@
 #include <array>
 #include <utility>
 #include <cassert>
+#include <string>
 
 #include "algorithm/stl_extension/conversion.hpp"
 

@@ -70,7 +70,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
             // set the token to true. If it was previously true, do not notify
             if (_closeToken.exchange(true)) return;
 
-            // container was not closed, notify all waiting threads.
+            // container was previously not closed, notify all waiting threads.
             _containerCV.notify_all();
         }
 
