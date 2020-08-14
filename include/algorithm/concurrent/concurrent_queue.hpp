@@ -110,25 +110,27 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
 
         template<class ... Args>
-        void emplace(access_token const& token, Args&& ... args) noexcept
-        { emplace_helper(token, std::forward<Args>(args) ...); }
+        reference emplace(access_token const& token, Args&& ... args) noexcept
+        { return emplace_helper(token, std::forward<Args>(args) ...); }
 
-        // TODO: implement me
+        // as with emplace, this is not allowed to return a reference
+        template<class... Args>
+        void emplace_back(Args&& ...args) noexcept
+        { emplace_back_helper(std::move(Guard()), std::forward<Args>(args)...); }
+
+        template<class... Args>
+        reference emplace_back(access_token const& token, Args&& ... args) noexcept
+        { return emplace_back_helper(token, std::forward<Args>(args)...); }
+
         /*!
          * Tries to remove the first element. If no element is available, this method returns immediately with the result of false.
          * @return True if an element could be removed.
          */
-        // bool try_pop(T& item)
-        // {
-        //     __HORIZON_CONCURRENT_ACQUIRE_LOCK(lock)
-        //
-        //     if (!CanModify()) return false;
-        //
-        //     item = std::move(_container.front());
-        //     _container.pop();
-        //
-        //     return true;
-        // }
+        inline bool try_pop(T& item)
+        { return try_pop(item, std::move(Guard())); }
+
+        inline bool try_pop(T& item, access_token&& token)
+        { return pop(item, std::forward<access_token>(token), time_type::zero()); }
 
 
         [[maybe_unused]]
@@ -214,15 +216,31 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
     private:
         template<class ... Args>
-        void emplace_helper(access_token const& token, Args&& ...args) noexcept
+        reference emplace_helper(access_token const& token, Args&& ...args) noexcept
         {
             CheckForOwnership;
 
             // ThrowIfClosed();
 
-            _container.emplace(std::forward<Args>(args)...);
+            // emplace value and store result
+            reference result = _container.emplace(std::forward<Args>(args)...);
 
+            // notify possible waiting threads and return the result of emplace
             _containerCV.notify_all();
+            return result;
+        }
+
+        template<class ... Args>
+        reference emplace_back_helper(access_token const& token, Args&& ...args) noexcept
+        {
+            CheckForOwnership;
+
+            // emplace value and store result
+            reference result = _container.emplace_back(std::forward<Args>(args)...);
+
+            // notify possible waiting threads and return the result of emplace
+            _containerCV.notify_all();
+            return result;
         }
 
         /*!
@@ -232,7 +250,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          */
         inline bool WaitForElementsInQueue(access_token& token, time_type const& waitTime) noexcept
         {
-            assert(waitTime.count() > 0);
+            // assert(waitTime.count() > 0);
 
             // early checks for either empty or closed.
             // first check if we have elements in queue, then for closed

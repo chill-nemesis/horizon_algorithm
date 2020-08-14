@@ -74,10 +74,14 @@ namespace HORIZON::ALGORITHM::STL_EXTENSION
     inline bool EraseItemFromVector(Vec& vector, El const& element)
     {
         It iterator;
-        if (IsItemInVector(vector, element, iterator))
-            vector.erase(element);
 
-        return iterator != vector.end();
+        // find the position of the element. This requires an equals operation defined on the element
+        if (!IsItemInVector(vector, element, iterator)) return false;
+
+        // iterator points to the element
+        // this modifies the iterator
+        vector.erase(iterator);
+        return true;
     }
 
 }

@@ -13,7 +13,9 @@ set(HEADER
         include/algorithm/concurrent/concurrent_vector.hpp
         include/algorithm/concurrent/ContainerClosedError.hpp
         include/algorithm/stl_extension/vector.hpp
-        include/algorithm/UUID.hpp)
+        include/algorithm/UUID.hpp
+        include/algorithm/stl_extension/Callback.hpp
+        )
 
 set(SOURCE
         )
