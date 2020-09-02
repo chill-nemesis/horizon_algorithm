@@ -57,12 +57,6 @@ namespace HORIZON::ALGORITHM::CONCURRENT
             return _container.size();
         }
 
-        // TODO: maybe freeze the queue?
-        // reference front();
-        // const_reference front() const;
-        // reference back();
-        // const_reference back() const;
-
         /*!
          * Add data to the end of the %queue.
          * @param item  Data to be added.
@@ -112,15 +106,6 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         template<class ... Args>
         reference emplace(access_token const& token, Args&& ... args) noexcept
         { return emplace_helper(token, std::forward<Args>(args) ...); }
-
-        // as with emplace, this is not allowed to return a reference
-        template<class... Args>
-        void emplace_back(Args&& ...args) noexcept
-        { emplace_back_helper(std::move(Guard()), std::forward<Args>(args)...); }
-
-        template<class... Args>
-        reference emplace_back(access_token const& token, Args&& ... args) noexcept
-        { return emplace_back_helper(token, std::forward<Args>(args)...); }
 
         /*!
          * Tries to remove the first element. If no element is available, this method returns immediately with the result of false.
@@ -224,19 +209,6 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
             // emplace value and store result
             reference result = _container.emplace(std::forward<Args>(args)...);
-
-            // notify possible waiting threads and return the result of emplace
-            _containerCV.notify_all();
-            return result;
-        }
-
-        template<class ... Args>
-        reference emplace_back_helper(access_token const& token, Args&& ...args) noexcept
-        {
-            CheckForOwnership;
-
-            // emplace value and store result
-            reference result = _container.emplace_back(std::forward<Args>(args)...);
 
             // notify possible waiting threads and return the result of emplace
             _containerCV.notify_all();
