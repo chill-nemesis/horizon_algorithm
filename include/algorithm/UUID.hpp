@@ -45,7 +45,7 @@ namespace HORIZON::ALGORITHM
             // assert(N == UUID_LENGTH);
             // assert(uuid[8] == uuid[8 + 1 + 4] == uuid[8 + 1 + 4 + 1 + 4] == uuid[8 + 1 + 4 + 1 + 4 + 1 + 4] == '-');
 
-            for (auto i = 0, k = 0; i < N; ++i)
+            for (size_t i = 0, k = 0; i < N; ++i)
             {
                 _uuidString[i] = STL_EXTENSION::ToUpper(uuid[i]);
 
@@ -59,7 +59,7 @@ namespace HORIZON::ALGORITHM
 
         [[nodiscard]] constexpr bool Equals(UUID const& other) const noexcept
         {
-            for (auto i = 0; i < UUID_LENGTH_RAW; ++i) { if (_uuid[i] != other._uuid[i]) return false; }
+            for (size_t i = 0; i < UUID_LENGTH_RAW; ++i) { if (_uuid[i] != other._uuid[i]) return false; }
             return true;
         }
 

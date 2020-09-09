@@ -21,9 +21,9 @@ namespace HORIZON::ALGORITHM::STL_EXTENSION
      */
     static constexpr std::uint8_t HexCharToByte(char const& hex)
     {
-        if ((hex >= 'a') && (hex <= 'f')) return hex - (uint8_t) 'a' + 10;
-        if ((hex >= 'A') && (hex <= 'F')) return hex - (uint8_t) 'A' + 10;
-        if ((hex >= '0') && (hex <= '9')) return hex - (uint8_t) '0' + 0;
+        if ((hex >= 'a') && (hex <= 'f')) return (uint8_t) (hex - 'a' + 10);
+        if ((hex >= 'A') && (hex <= 'F')) return (uint8_t) (hex - 'A' + 10);
+        if ((hex >= '0') && (hex <= '9')) return (uint8_t) (hex - '0' + 0);
 
         return hex;
     }
