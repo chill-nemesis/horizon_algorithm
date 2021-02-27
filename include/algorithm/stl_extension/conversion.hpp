@@ -16,8 +16,13 @@
 namespace HORIZON::ALGORITHM::STL_EXTENSION
 {
     /*!
-     * Converts a hexadecimal character to its byte representation.
+     * @ingroup group_algorithm_stl
+     *
+     * @details Converts a hexadecimal character to its byte representation.
      * If the character does not represent a hexadecimal value, its character-value is returned.
+     *
+     * @param hex The character to convert.
+     * @returns The byte representation of the hex character.
      */
     static constexpr std::uint8_t HexCharToByte(char const& hex)
     {
@@ -28,6 +33,14 @@ namespace HORIZON::ALGORITHM::STL_EXTENSION
         return hex;
     }
 
+    /*!
+     * @ingroup group_algorithm_stl
+     *
+     * @brief Converts a character to upper case.
+     * @details If the character is not in [a-zA-Z], the returned character is not modified.
+     * @param character The character to convert.
+     * @return The character converted to upper case or the unmodified character if it was not in range [a-zA-Z].
+     */
     static constexpr char ToUpper(char const& character)
     {
         if ((character >= 'a') && (character <= 'z')) return character - 'a' + 'A';

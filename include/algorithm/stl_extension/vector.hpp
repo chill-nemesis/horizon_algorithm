@@ -17,71 +17,64 @@
 namespace HORIZON::ALGORITHM::STL_EXTENSION
 {
     /*!
-     * Gets the iterator to an item in a vector or vector.end() if the item could not be found.
+     * @ingroup group_algorithm_stl
      *
-     * @param vector    The vector to search.
+     * @brief Returns true if an item is present in a container.
+     *
+     * @param container The container to search.
      * @param element   The element to find.
-     * @return          An iterator to the element or vector.end().
+     * @return          True if the element is present in the container.
      */
-    template<class Vec,
-             typename El = typename Vec::value_type,
-             typename It = typename Vec::iterator>
-    inline It FindInVector(Vec const& vector, El const& element)
-    { return std::find(vector.begin(), vector.end(), element); }
-
+    template<class Container,
+             typename El = typename Container::value_type>
+    inline bool HasItem(Container const& container, El const& element)
+    { return std::find(container.begin(), container.end(), element) != container.end(); }
 
     /*!
-     * Returns true if an item is present in the vector.
+     * @ingroup group_algorithm_stl
+     * @brief Finds an item in a container.
      *
-     * @param vector
-     * @param element
-     * @return
-     */
-    template<class Vec,
-             typename El = typename Vec::value_type>
-    inline bool IsItemInVector(Vec const& vector, El const& element)
-    { return FindInVector(vector, element) != vector.end(); }
-
-    /*!
-     * Returns true if an item is present in the vector. The iterator will point to the item.
-     * If the item is not found, iterator points to vector.end() and false is returned.
+     * @details Returns true if an item is present in a container. If true, the iterator will point to the item.
+     * If the item is not found, iterator points to container.end() and false is returned.
      *
-     * @param vector
-     * @param element
-     * @param iterator
-     * @return
+     * @param container The container to search.
+     * @param element   The element to find.
+     * @param iterator  A container iterator. After calling this method, the iterator will either point to the element or the end of the container.
+     * @return          True if the element is present.
      */
-    template<class Vec,
-             typename El = typename Vec::value_type,
-             typename It = typename Vec::iterator>
-    inline bool IsItemInVector(Vec const& vector, El const& element, It& iterator)
+    template<class Container,
+             typename El = typename Container::value_type,
+             typename It = typename Container::iterator>
+    inline bool HasItem(Container const& container, El const& element, It& iterator) // TODO: const iterator?
     {
-        iterator = FindInVector(vector, element);
-        return iterator != vector.end();
+        iterator = std::find(container.begin(), container.end(), element);
+        return iterator != container.end();
     }
 
     /*!
-     * Erases an item from a vector, if the item is present.
+     * @ingroup group_algorithm_stl
+     * @brief Removes an item from a container.
+     *
+     * @details Erases an item from a container if the item is present.
      * Returns true on a successful removal.
      *
-     * @param vector
+     * @param container
      * @param element
      * @return
      */
-    template<class Vec,
-             typename El = typename Vec::value_type,
-             typename It = typename Vec::iterator>
-    inline bool EraseItemFromVector(Vec& vector, El const& element)
+    template<class Container,
+             typename El = typename Container::value_type,
+             typename It = typename Container::iterator>
+    inline bool EraseItem(Container& container, El const& element)
     {
         It iterator;
 
         // find the position of the element. This requires an equals operation defined on the element
-        if (!IsItemInVector(vector, element, iterator)) return false;
+        if (!IsItemInVector(container, element, iterator)) return false;
 
         // iterator points to the element
         // this modifies the iterator
-        vector.erase(iterator);
+        container.erase(iterator);
         return true;
     }
-
 }

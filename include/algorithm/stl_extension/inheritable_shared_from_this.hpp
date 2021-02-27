@@ -15,6 +15,10 @@
 
 namespace HORIZON::ALGORITHM::STL_EXTENSION
 {
+    /*!
+     * @brief Allows an inherited class to define the shared_from_this interface.
+     * @tparam C
+     */
     // TODO: make sure C is a valid type
     template<class C>
     class inheritable_shared_from_this : public std::enable_shared_from_this<inheritable_shared_from_this<C>>

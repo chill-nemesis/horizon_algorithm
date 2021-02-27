@@ -1,0 +1,50 @@
+/*!
+ * @defgroup group_module_algorithm Algorithm
+ * @ingroup group_horizon
+ * @brief This module contains a set of algorithms.
+ *
+ * @details This module provides an implementation for concurrent STL containers. They are inherently thread safe (unless used with non-const
+ * iterators) and provide ownership features.
+ * In addition, an extension to some STL-functions are implemented.
+ */
+
+/*!
+ * @defgroup group_algorithm_concurrent Concurrent
+ * @ingroup group_module_algorithm
+ * @brief A subset of the stl containers, modified for concurrent access.
+ */
+
+/*!
+ * @defgroup group_algorithm_stl STL_Extension
+ * @ingroup group_module_algorithm
+ *
+ * @brief Extensions to the stl library.
+ */
+
+
+/*!
+ * @ingroup group_module_algorithm
+ *
+ * @brief The namespace of the algorithm module.
+ */
+namespace HORIZON::ALGORITHM
+{
+};
+
+/*!
+ * @ingroup group_algorithm_concurrent
+ *
+ * @brief The namespace of the concurrent containers.
+ */
+namespace HORIZON::ALGORITHM::CONCURRENT
+{
+};
+
+/*!
+ * @ingroup group_algorithm_stl
+ *
+ * @brief The namespace of the stl_extension-functions.
+ */
+namespace HORIZON::ALGORITHM::STL_EXTENSION
+{
+};

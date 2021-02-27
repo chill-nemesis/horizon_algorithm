@@ -11,6 +11,7 @@
 
 #pragma once
 
+#if 0
 #include "algorithm/concurrent/concurrent_base.hpp"
 #include <unordered_map>
 
@@ -89,7 +90,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         inline size_type size(access_token const& token) const
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
             return _container.size();
         }
 
@@ -97,7 +98,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         inline bool empty(access_token const& token) const override
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
             return _container.empty();
         }
 
@@ -106,7 +107,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         inline size_type max_size(access_token const& token) const
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
             return _container.max_size();
         }
 
@@ -115,7 +116,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         void clear(access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
             _container.clear();
         }
 
@@ -124,7 +125,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         void insert(value_type const& value, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             ThrowIfClosed();
 
@@ -137,7 +138,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         void insert(value_type&& value, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             ThrowIfClosed();
 
@@ -152,7 +153,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         template<class P>
         void insert(P&& value, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             ThrowIfClosed();
 
@@ -167,7 +168,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         template<class InputIt>
         void insert(InputIt first, InputIt last, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             ThrowIfClosed();
             _container.insert(first, last);
@@ -181,7 +182,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         void insert(std::initializer_list<value_type> ilist, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             ThrowIfClosed();
 
@@ -194,7 +195,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         void insert(node_type&& nh, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             ThrowIfClosed();
 
@@ -209,7 +210,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         template<class M>
         bool insert_or_assign(key_type const& k, M&& value, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             ThrowIfClosed();
 
@@ -248,7 +249,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         size_type erase(key_type const& key, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
             ThrowIfClosed();
 
             return _container.erase(key);
@@ -262,7 +263,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          */
         T& at(key_type const& key, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             // reference version, this introduces race conditions!
             // TODO: lock the container
@@ -275,7 +276,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
          */
         T& operator()(key_type const& key, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             // TODO: lock the container
             return _container[key];
@@ -283,7 +284,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         T& operator()(key_type&& key, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             // TODO: lock the container
             return _container[std::forward<key_type>(key)];
@@ -294,7 +295,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         size_type count(key_type const& key, access_token const& token) const
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             return _container.count(key);
         }
@@ -302,7 +303,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         bool find(key_type const& key, T& item, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             auto it = _container.find(key);
             if (it == _container.end()) return false;
@@ -313,7 +314,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         T& get_first(access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             auto it = _container.begin();
             if (it == _container.end()) throw std::out_of_range("No first element.");
@@ -326,7 +327,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         T& pop_first(access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             auto it = _container.begin();
             if (it == _container.end()) throw std::out_of_range("No first element.");
@@ -343,7 +344,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         bool pop_key(key_type const& key, T& item, access_token const& token)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
 
             // find the item
             if (find(key, item, token))
@@ -384,7 +385,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         template<class ... Args>
         bool emplace_helper(access_token const& token, Args&& ...args)
         {
-            CheckForOwnership;
+            CheckForOwnership(token);
             ThrowIfClosed();
 
             auto result = _container.emplace(std::forward<Args>(args)...).second;
@@ -394,3 +395,5 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
     };
 }
+
+#endif
