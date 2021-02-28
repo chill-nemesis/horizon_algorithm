@@ -90,6 +90,8 @@ namespace HORIZON::ALGORITHM::CONCURRENT
             return _container.size();
         }
 
+        using concurrent_base::empty;
+
         [[nodiscard]] inline bool empty(access_token const& token) const override
         {
             CheckForOwnership(token);
@@ -99,6 +101,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 
         /*!
          * @brief Resizes the container.
+         * @param size The new size of the container (in elements).
          */
         void resize(size_type size)
         { resize(size, std::move(Guard())); }

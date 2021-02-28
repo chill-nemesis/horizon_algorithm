@@ -73,6 +73,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         ~concurrent_queue()
         { close(); }
 
+        using concurrent_base::empty;
 
         [[nodiscard]] inline bool empty(access_token const& token) const override
         {
@@ -264,7 +265,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
         }
 
         /*!
-         * @copydoc pop(T&, time_type)
+         * @copydoc pop(T&, time_type const&)
          * @param token  The access token of this queue.
          */
         bool pop(T& item, access_token&& token, time_type const& maximumWaitTime = _maxWaitTime) noexcept
