@@ -1,6 +1,6 @@
 //
-// @brief   
-// @details 
+// @brief
+// @details
 // @author  Steffen Peikert (ch3ll)
 // @email   Horizon@ch3ll.com
 // @version 1.0.0
@@ -12,8 +12,9 @@
 #pragma once
 
 #if 0
-#include "algorithm/concurrent/concurrent_base.hpp"
-#include <unordered_map>
+#	include "algorithm/concurrent/concurrent_base.hpp"
+
+#	include <unordered_map>
 
 namespace HORIZON::ALGORITHM::CONCURRENT
 {

@@ -1,6 +1,6 @@
 //
-// @brief   
-// @details 
+// @brief
+// @details
 // @author  Steffen Peikert (ch3ll)
 // @email   Horizon@ch3ll.com
 // @version 1.0.0
@@ -15,10 +15,9 @@
 
 namespace HORIZON::ALGORITHM::CONCURRENT
 {
-    class ContainerClosedError : public std::logic_error
-    {
-    public:
-        ContainerClosedError() : std::logic_error("Container is closed and cannot be modified!")
-        { }
-    };
-}
+	class ContainerClosedError : public std::logic_error
+	{
+	public:
+		ContainerClosedError() : std::logic_error("Container is closed and cannot be modified!") { }
+	};
+}  // namespace HORIZON::ALGORITHM::CONCURRENT
