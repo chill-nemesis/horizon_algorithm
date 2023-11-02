@@ -11,15 +11,15 @@
 
 #pragma once
 
-#include "algorithm/concurrent/ContainerClosedError.hpp"
+#include "horizon/algorithm/concurrent/ContainerClosedError.hpp"
 
 #include <atomic>
 #include <cassert>
 #include <chrono>
 #include <condition_variable>
+#include <horizon/preprocessor/unique_lock.hpp>
 #include <memory>
 #include <mutex>
-#include <preprocessor/unique_lock.hpp>
 
 namespace HORIZON::ALGORITHM::CONCURRENT
 {
@@ -81,7 +81,7 @@ namespace HORIZON::ALGORITHM::CONCURRENT
 		 * @brief Locks the container and returns an access token for concurrent calls to the container
 		 * Blocks if the lock is not available.
 		 *
-		 * @include <preprocessor/unique_lock.hpp>
+		 * @include <horizon/preprocessor/unique_lock.hpp>
 		 */
 		HORIZON_AddLockGuardsMutable(_containerAccess)
 

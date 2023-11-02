@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "concurrent_base.hpp"
+#include "horizon/algorithm/concurrent/concurrent_base.hpp"
 
 #include <queue>
 
