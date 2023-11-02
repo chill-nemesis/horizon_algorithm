@@ -3,4 +3,4 @@ project(horizon_algorithm VERSION 0.0.0 LANGUAGES CXX C)
 
 
 MakeHorizonModule(INTERFACE
-        INTERFACE_DEPENDENCIES horizon_preprocessor)
+        INTERFACE_DEPENDENCIES horizon::preprocessor)
